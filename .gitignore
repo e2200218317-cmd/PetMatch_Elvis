@@ -1,0 +1,10 @@
+**/bin/
+**/obj/
+.DS_Store
+.env
+.env.*
+*.keystore
+*.jks
+supabase/.temp/
+supabase/.branches/
+**/node_modules/

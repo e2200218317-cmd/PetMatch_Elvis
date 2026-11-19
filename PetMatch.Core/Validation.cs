@@ -53,6 +53,35 @@ public static class Validation
         if (!hasPhoto) throw new ArgumentException("Selecciona una foto de perfil.");
     }
 
+    public static readonly string[] Species = ["Perro", "Gato", "Otro"];
+    public static readonly string[] Sexes = ["Macho", "Hembra"];
+    public static readonly string[] Sizes = ["Pequeño", "Mediano", "Grande"];
+
+    public static void Pet(PetPost p)
+    {
+        p.nombre = p.nombre?.Trim(); p.especie = p.especie.Trim(); p.raza = p.raza.Trim(); p.edad = p.edad.Trim();
+        p.sexo = p.sexo.Trim(); p.tamano = p.tamano.Trim(); p.color = p.color?.Trim(); p.salud = p.salud.Trim();
+        p.vacunas = p.vacunas?.Trim(); p.ubicacion = p.ubicacion.Trim(); p.descripcion = p.descripcion?.Trim();
+        if (p.nombre?.Length > 60) throw new ArgumentException("El nombre admite máximo 60 caracteres.");
+        if (!Species.Contains(p.especie)) throw new ArgumentException("Elige la especie.");
+        if (!Sexes.Contains(p.sexo)) throw new ArgumentException("Elige el sexo.");
+        if (!Sizes.Contains(p.tamano)) throw new ArgumentException("Elige el tamaño.");
+        if (p.raza.Length is < 2 or > 60 || p.edad.Length is < 1 or > 30)
+            throw new ArgumentException("Completa la raza y la edad.");
+        if (p.salud.Length is < 2 or > 200)
+            throw new ArgumentException("Describe el estado de salud (de 2 a 200 caracteres).");
+        if (p.ubicacion.Length is < 3 or > 120)
+            throw new ArgumentException("Escribe la ubicación (de 3 a 120 caracteres).");
+        if (p.color?.Length > 60 || p.vacunas?.Length > 200 || p.descripcion?.Length > 500)
+            throw new ArgumentException("Color hasta 60, vacunas hasta 200 y comentario hasta 500 caracteres.");
+    }
+
+    public static void PetPhotos(IReadOnlyList<byte[]> photos)
+    {
+        if (photos.Count is < 3 or > 5) throw new ArgumentException("Agrega entre 3 y 5 fotos de la mascota.");
+        foreach (var photo in photos) ImageType(photo);
+    }
+
     public static string ImageType(byte[] bytes)
     {
         if (bytes.Length is 0 or > 5242880) throw new ArgumentException("La foto debe pesar como máximo 5 MB.");

@@ -30,10 +30,11 @@ public sealed class ProfilePage : FormPage
                 Ui.Text("Cédula: " + p.cedula), Ui.Text("Fecha de nacimiento: " + p.fecha_nacimiento.ToString("dd/MM/yyyy"))
             } }, true));
             details.Add(ActionButton("Editar mi perfil", () => Navigation.PushAsync(new ProfileFormPage(p)), true));
-            details.Add(ActionButton("Publicar una mascota", () => AppFlow.RequireAsync(this, () => new IntegrationPage("Publicar una mascota", "Dylan"))));
-            details.Add(ActionButton("Mis mascotas publicadas", () => AppFlow.RequireAsync(this, () => new IntegrationPage("Mis publicaciones", "Dylan")), true));
+            details.Add(ActionButton("Publicar una mascota", () => AppFlow.RequireAsync(this, () => new PetFormPage())));
+            details.Add(ActionButton("Mis mascotas publicadas", () => AppFlow.RequireAsync(this, () => new MyPetsPage()), true));
+            details.Add(ActionButton("Solicitudes recibidas", () => AppFlow.RequireAsync(this, () => new ReceivedRequestsPage()), true));
             details.Add(ActionButton("Mascotas de interés", () => AppFlow.RequireAsync(this, () => new IntegrationPage("Mascotas de interés", "David")), true));
-            details.Add(ActionButton("Notificaciones", () => AppFlow.RequireAsync(this, () => new IntegrationPage("Notificaciones", "Dylan")), true));
+            details.Add(ActionButton("Notificaciones", () => AppFlow.RequireAsync(this, () => new NotificationsPage()), true));
             details.Add(ActionButton("Eliminar mi cuenta", () => Navigation.PushAsync(new DeleteAccountPage()), danger: true));
             try
             {

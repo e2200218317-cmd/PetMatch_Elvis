@@ -62,6 +62,63 @@ handler.Queue.Enqueue(req =>
 var pets = await api.CatalogAsync(12, 13);
 Check(pets.Single().FotoUrl == "https://example.com/luna.jpg", "catálogo lee la URL de la foto");
 Check(handler.Keys.All(x => x == "sb_publishable_example_for_tests"), "cada solicitud incluye clave pública");
+
+PetPost Pet() => new() { nombre = " Luna ", especie = "Perro", raza = "Mestizo", edad = "2 años", sexo = "Hembra",
+    tamano = "Mediano", salud = "Sana y desparasitada", ubicacion = "El Coca" };
+var pet = Pet(); Validation.Pet(pet); Check(pet.nombre == "Luna", "mascota válida y nombre recortado");
+Reject(() => Validation.Pet(new PetPost { especie = "Dragón" }), "especie fuera de la lista");
+Reject(() => { var p = Pet(); p.salud = ""; Validation.Pet(p); }, "salud obligatoria");
+Reject(() => { var p = Pet(); p.descripcion = new string('x', 501); Validation.Pet(p); }, "comentario de más de 500 caracteres");
+byte[] png = [137, 80, 78, 71, 13, 10, 26, 10, 0];
+Reject(() => Validation.PetPhotos([png, png]), "menos de 3 fotos");
+Reject(() => Validation.PetPhotos([png, png, png, png, png, png]), "más de 5 fotos");
+Reject(() => Validation.PetPhotos([png, png, [1, 2, 3]]), "foto de mascota que no es imagen");
+var now = DateTimeOffset.UtcNow;
+Check(new PetPost { disponible = true, vence_en = now.AddDays(1) }.Estado(now) == "Disponible", "estado disponible");
+Check(new PetPost { disponible = true, vence_en = now.AddMinutes(-1) }.Estado(now) == "Vencida", "estado vencida antes de la tarea programada");
+Check(new PetPost { disponible = false, vence_en = now.AddDays(1) }.Estado(now) == "Adoptada", "estado adoptada");
+
+handler.Queue.Enqueue(_ => new(HttpStatusCode.OK) { Content = new StringContent(Session(DateTimeOffset.UtcNow.AddHours(1).ToUnixTimeSeconds())) });
+await api.LoginAsync("test@example.com", "Password1");
+string? rpcBody = null;
+for (int i = 0; i < 3; i++)
+    handler.Queue.Enqueue(req =>
+    {
+        Check(req.RequestUri!.AbsolutePath.StartsWith("/storage/v1/object/pet-photos/11111111-1111-1111-1111-111111111111/"), "foto subida a la carpeta del usuario");
+        return new(HttpStatusCode.OK) { Content = new StringContent("{}") };
+    });
+handler.Queue.Enqueue(req =>
+{
+    rpcBody = req.Content!.ReadAsStringAsync().Result;
+    return new(HttpStatusCode.OK) { Content = new StringContent("\"22222222-2222-2222-2222-222222222222\"") };
+});
+var created = await api.PublishPetAsync(Pet(), [png, png, png]);
+using (var body = JsonDocument.Parse(rpcBody!))
+{
+    var fotos = body.RootElement.GetProperty("p_fotos").EnumerateArray().Select(x => x.GetString()!).ToList();
+    Check(created == Guid.Parse("22222222-2222-2222-2222-222222222222") && fotos.Count == 3, "publicación envía las 3 rutas y devuelve el id");
+    Check(body.RootElement.GetProperty("p_portada_url").GetString() == "https://test.supabase.co/storage/v1/object/public/pet-photos/" + fotos[0], "portada es la URL pública de la primera foto");
+}
+for (int i = 0; i < 3; i++) handler.Queue.Enqueue(_ => new(HttpStatusCode.OK) { Content = new StringContent("{}") });
+handler.Queue.Enqueue(_ => new(HttpStatusCode.BadRequest) { Content = new StringContent("{\"code\":\"P0001\",\"message\":\"PETMATCH: Ya tienes 5 publicaciones activas.\"}") });
+string? cleanup = null;
+handler.Queue.Enqueue(req => { cleanup = req.Method + " " + req.RequestUri!.AbsolutePath; return new(HttpStatusCode.OK) { Content = new StringContent("[]") }; });
+try { await api.PublishPetAsync(Pet(), [png, png, png]); Check(false, "límite rechazado por el servidor"); }
+catch (ApiException e) { Check(e.Message == "Ya tienes 5 publicaciones activas.", "mensaje del límite de 5 visible"); }
+Check(cleanup == "DELETE /storage/v1/object/pet-photos", "fotos subidas se limpian si el servidor rechaza");
+handler.Queue.Enqueue(_ => new(HttpStatusCode.OK) { Content = new StringContent("[\"11111111-1111-1111-1111-111111111111/a.png\"]") });
+handler.Queue.Enqueue(req => { cleanup = req.Content!.ReadAsStringAsync().Result; return new(HttpStatusCode.OK) { Content = new StringContent("[]") }; });
+await api.DeletePetAsync(created);
+Check(cleanup!.Contains("11111111-1111-1111-1111-111111111111/a.png"), "eliminar publicación borra sus fotos de Storage");
+handler.Queue.Enqueue(_ => new(HttpStatusCode.OK) { Content = new StringContent("""
+    [{"id":"33333333-3333-3333-3333-333333333333","mascota_id":"22222222-2222-2222-2222-222222222222","mascota":"Luna","estado":"Pendiente","mensaje":null,"creado_en":"2026-11-18T10:00:00+00:00","solicitante_id":"44444444-4444-4444-4444-444444444444","nombres":"Beto","apellidos":"Prueba","ciudad":"Quito","celular":"+593991234567"}]
+    """) });
+var received = await api.ReceivedRequestsAsync();
+Check(received.Single().estado == "Pendiente" && received[0].celular == "+593991234567", "solicitudes recibidas se leen");
+handler.Queue.Enqueue(_ => new(HttpStatusCode.OK) { Content = new StringContent("""
+    [{"id":"55555555-5555-5555-5555-555555555555","mensaje":"Tu solicitud para Luna fue aceptada.","leida":false,"creado_en":"2026-11-18T10:00:00+00:00"}]
+    """) });
+Check(!(await api.NotificationsAsync()).Single().leida, "notificaciones se leen");
 Console.WriteLine($"\n{passed} comprobaciones correctas.");
 
 sealed class MemoryStore : ISessionStore

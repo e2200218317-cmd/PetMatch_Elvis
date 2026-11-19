@@ -5,7 +5,7 @@ using System.Text.Json;
 namespace PetMatch.Core;
 
 // REST oficial de Supabase Auth / PostgREST / Storage. Sin contraseña de PostgreSQL.
-public sealed class SupabaseApi(HttpClient http, ISessionStore store, string url, string publicKey)
+public sealed partial class SupabaseApi(HttpClient http, ISessionStore store, string url, string publicKey)
 {
     private readonly SemaphoreSlim refreshLock = new(1, 1);
     private readonly string root = url.TrimEnd('/');

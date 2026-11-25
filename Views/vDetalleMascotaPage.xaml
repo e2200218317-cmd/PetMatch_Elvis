@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="PetMatch.Views.vDetalleMascotaPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    Title="Detalle de mascota">
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="14">
+            <Image Source="{Binding ImagenUrl}" HeightRequest="280" Aspect="AspectFill" />
+            <Label Text="{Binding Nombre}" FontSize="30" FontAttributes="Bold" />
+            <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="12" RowSpacing="10">
+                <Label Text="Especie" FontAttributes="Bold" /><Label Grid.Column="1" Text="{Binding Especie}" />
+                <Label Grid.Row="1" Text="Raza" FontAttributes="Bold" /><Label Grid.Row="1" Grid.Column="1" Text="{Binding Raza}" />
+                <Label Grid.Row="2" Text="Edad" FontAttributes="Bold" /><Label Grid.Row="2" Grid.Column="1" Text="{Binding Edad}" />
+                <Label Grid.Row="3" Text="Sexo" FontAttributes="Bold" /><Label Grid.Row="3" Grid.Column="1" Text="{Binding Sexo}" />
+            </Grid>
+            <HorizontalStackLayout Spacing="8">
+                <Label Text="Tamaño:" FontAttributes="Bold" />
+                <Label Text="{Binding Tamaño}" />
+            </HorizontalStackLayout>
+            <Label Text="Descripción" FontSize="20" FontAttributes="Bold" />
+            <Label Text="{Binding Descripcion}" LineBreakMode="WordWrap" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

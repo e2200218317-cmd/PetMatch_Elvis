@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="PetMatch.Views.vCatalogoMascotasPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:models="clr-namespace:PetMatch.Models"
+    Title="Catálogo">
+    <ContentPage.Content>
+        <Grid Padding="20" RowDefinitions="Auto,*" RowSpacing="16">
+            <Label Text="Mascotas disponibles" FontSize="28" FontAttributes="Bold" />
+            <CollectionView Grid.Row="1" ItemsSource="{Binding Mascotas}" SelectionMode="None">
+                <CollectionView.EmptyView>
+                    <VerticalStackLayout Padding="24" Spacing="8" VerticalOptions="Center">
+                        <Label Text="El catálogo aparecerá aquí" FontSize="18" HorizontalTextAlignment="Center" />
+                        <Label Text="Todavía no hay mascotas para mostrar." TextColor="Gray" HorizontalTextAlignment="Center" />
+                    </VerticalStackLayout>
+                </CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:Mascota">
+                        <Border Margin="0,0,0,14" Padding="12" Stroke="#E3E3E3" StrokeShape="RoundRectangle 14">
+                            <Grid ColumnDefinitions="110,*" ColumnSpacing="14">
+                                <Image Source="{Binding ImagenUrl}" HeightRequest="110" WidthRequest="110" Aspect="AspectFill" />
+                                <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="5">
+                                    <Label Text="{Binding Nombre}" FontSize="20" FontAttributes="Bold" />
+                                    <Label Text="{Binding Especie}" />
+                                    <Label Text="{Binding Edad}" />
+                                    <Label Text="{Binding Raza}" TextColor="Gray" />
+                                </VerticalStackLayout>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </Grid>
+    </ContentPage.Content>
+</ContentPage>

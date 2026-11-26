@@ -26,14 +26,43 @@ public static class Ui
         StrokeShape = new RoundRectangle { CornerRadius = 18 },
         BackgroundColor = tinted ? Color.FromArgb("#EEF9FF") : Colors.White
     };
-    public static View Field(string label, View input) => new VerticalStackLayout
+    public static View Field(string label, View input)
     {
-        Spacing = 6, Children = { Text(label, 13, true), new Border
+        var field = new VerticalStackLayout
         {
-            Content = input, Padding = new Thickness(12, 0), BackgroundColor = Color.FromArgb("#F8FAFC"),
-            Stroke = Color.FromArgb("#DCE5EB"), StrokeShape = new RoundRectangle { CornerRadius = 12 }
-        } }
-    };
+            Spacing = 6,
+            Children =
+            {
+                Text(label, 13, true),
+                new Border
+                {
+                    Content = input, Padding = new Thickness(12, 0), BackgroundColor = Color.FromArgb("#F8FAFC"),
+                    Stroke = Color.FromArgb("#DCE5EB"), StrokeShape = new RoundRectangle { CornerRadius = 12 }
+                }
+            }
+        };
+
+        if (input is Entry { IsPassword: true } passwordEntry)
+        {
+            var checkBox = new CheckBox { Color = Color.FromArgb("#0284C7") };
+            SemanticProperties.SetDescription(checkBox, $"Mostrar contraseña ({label.TrimEnd(' ', '*')})");
+            checkBox.CheckedChanged += (_, e) => passwordEntry.IsPassword = !e.Value;
+
+            var caption = Text("Mostrar contraseña", 13);
+            caption.VerticalOptions = LayoutOptions.Center;
+            caption.GestureRecognizers.Add(new TapGestureRecognizer
+            {
+                Command = new Command(() => checkBox.IsChecked = !checkBox.IsChecked)
+            });
+            field.Children.Add(new HorizontalStackLayout
+            {
+                Spacing = 4,
+                Children = { checkBox, caption }
+            });
+        }
+
+        return field;
+    }
     public static Button Button(string text, bool secondary = false, bool danger = false) => new()
     {
         Text = text, FontSize = 15, FontAttributes = FontAttributes.Bold, CornerRadius = 14,

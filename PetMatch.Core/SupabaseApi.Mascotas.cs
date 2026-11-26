@@ -91,4 +91,32 @@ public sealed partial class SupabaseApi
 
     public Task MarkNotificationsReadAsync() =>
         AuthorizedAsync(HttpMethod.Post, "/rest/v1/rpc/marcar_notificaciones_leidas", new { });
+
+    // Con sesión, el responsable también puede ver su publicación aunque esté vencida o adoptada.
+    public async Task<PetDetails?> PetDetailsAsync(Guid id)
+    {
+        var json = Session == null
+            ? await Request(HttpMethod.Post, "/rest/v1/rpc/detalle_mascota", new { p_mascota = id })
+            : await AuthorizedAsync(HttpMethod.Post, "/rest/v1/rpc/detalle_mascota", new { p_mascota = id });
+        return JsonSerializer.Deserialize<List<PetDetails>>(json, Json)?.SingleOrDefault();
+    }
+
+    public async Task<PublicProfile?> PetOwnerAsync(Guid ownerId)
+    {
+        var json = await AuthorizedAsync(HttpMethod.Post, "/rest/v1/rpc/ver_perfil_contacto", new { p_usuario = ownerId });
+        return JsonSerializer.Deserialize<List<PublicProfile>>(json, Json)?.SingleOrDefault();
+    }
+
+    public async Task<Guid> SendAdoptionRequestAsync(Guid petId, string? message)
+    {
+        var json = await AuthorizedAsync(HttpMethod.Post, "/rest/v1/rpc/enviar_solicitud",
+            new { p_mascota = petId, p_mensaje = string.IsNullOrWhiteSpace(message) ? null : message.Trim() });
+        return JsonSerializer.Deserialize<Guid>(json, Json);
+    }
+
+    public async Task<IReadOnlyList<AdoptionRequest>> MyAdoptionRequestsAsync()
+    {
+        var json = await AuthorizedAsync(HttpMethod.Post, "/rest/v1/rpc/mis_solicitudes", new { });
+        return JsonSerializer.Deserialize<List<AdoptionRequest>>(json, Json) ?? [];
+    }
 }

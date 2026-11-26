@@ -119,6 +119,39 @@ handler.Queue.Enqueue(_ => new(HttpStatusCode.OK) { Content = new StringContent(
     [{"id":"55555555-5555-5555-5555-555555555555","mensaje":"Tu solicitud para Luna fue aceptada.","leida":false,"creado_en":"2026-11-18T10:00:00+00:00"}]
     """) });
 Check(!(await api.NotificationsAsync()).Single().leida, "notificaciones se leen");
+handler.Queue.Enqueue(req =>
+{
+    Check(req.Headers.Authorization != null && req.RequestUri!.AbsolutePath == "/rest/v1/rpc/detalle_mascota", "detalle con sesión usa el token del usuario");
+    return new(HttpStatusCode.OK) { Content = new StringContent("""
+        [{"id":"22222222-2222-2222-2222-222222222222","nombre":null,"especie":"Gato","raza":"Mestizo","edad":"1 año","sexo":"Macho","tamano":"Pequeño","salud":"Sano","ubicacion":"Quito","propietario_id":"44444444-4444-4444-4444-444444444444","fotos":["44444444-4444-4444-4444-444444444444/a.png"]}]
+        """) };
+});
+var detail = await api.PetDetailsAsync(created);
+Check(detail!.Titulo == "Gato" && detail.fotos.Length == 1, "detalle lee fotos y usa la especie si no hay nombre");
+handler.Queue.Enqueue(_ => new(HttpStatusCode.OK) { Content = new StringContent("[]") });
+Check(await api.PetDetailsAsync(created) == null, "detalle de publicación no visible devuelve vacío");
+handler.Queue.Enqueue(req =>
+{
+    rpcBody = req.Content!.ReadAsStringAsync().Result;
+    return new(HttpStatusCode.OK) { Content = new StringContent("\"66666666-6666-6666-6666-666666666666\"") };
+});
+await api.SendAdoptionRequestAsync(created, "   ");
+Check(rpcBody!.Contains("\"p_mensaje\":null"), "solicitud con mensaje en blanco se envía sin mensaje");
+handler.Queue.Enqueue(_ => new(HttpStatusCode.BadRequest) { Content = new StringContent("{\"code\":\"P0001\",\"message\":\"PETMATCH: Ya enviaste una solicitud para esta mascota.\"}") });
+try { await api.SendAdoptionRequestAsync(created, null); Check(false, "solicitud repetida rechazada"); }
+catch (ApiException e) { Check(e.Message == "Ya enviaste una solicitud para esta mascota.", "mensaje de solicitud repetida visible"); }
+handler.Queue.Enqueue(_ => new(HttpStatusCode.OK) { Content = new StringContent("""
+    [{"id":"66666666-6666-6666-6666-666666666666","mascota_id":"22222222-2222-2222-2222-222222222222","mascota":"Gato","estado":"Aceptada","mensaje":null,"creado_en":"2026-11-18T10:00:00+00:00"}]
+    """) });
+Check((await api.MyAdoptionRequestsAsync()).Single().estado == "Aceptada", "mis solicitudes se leen");
+Check(PlaceLookup.Format("""{"address":{"road":"Av. Amazonas","suburb":"La Mariscal","city":"Quito","country":"Ecuador"}}""") == "Quito, La Mariscal", "ubicación GPS se muestra como ciudad y sector");
+Check(PlaceLookup.Format("""{"address":{"road":"Chile","neighbourhood":"González Suárez","city":"Quito"}}""") == "Quito, González Suárez", "usa el barrio como sector");
+Check(PlaceLookup.Format("""{"address":{"town":"El Coca","road":"Calle 9 de Octubre"}}""") == "El Coca, Calle 9 de Octubre", "sin barrio usa la calle como sector");
+Check(PlaceLookup.Format("""{"address":{"village":"Tena"}}""") == "Tena", "solo ciudad cuando no hay sector");
+Check(PlaceLookup.Format("""{"address":{"neighbourhood":"El Carmen","village":"Calderón","county":"Distrito Metropolitano de Quito","state":"Pichincha"}}""") == "Quito, El Carmen", "la parroquia no reemplaza a la ciudad");
+Check(PlaceLookup.Format("""{"address":{"village":"San Felipe","county":"Cantón Latacunga"}}""") == "Latacunga, San Felipe", "cantón como ciudad y parroquia como sector");
+try { PlaceLookup.Format("""{"error":"Unable to geocode"}"""); Check(false, "coordenadas sin dirección"); }
+catch (InvalidOperationException) { Check(true, "coordenadas sin dirección piden escribirla a mano"); }
 Console.WriteLine($"\n{passed} comprobaciones correctas.");
 
 sealed class MemoryStore : ISessionStore

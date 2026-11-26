@@ -38,12 +38,15 @@ public sealed class PetFormPage : FormPage
         }
         else
         {
-            var pick = Ui.Button("Agregar fotos", true);
+            var pick = Ui.Button("Elegir de la galería", true);
             pick.Clicked += async (_, _) => await Run(PickPhotosAsync);
+            var take = Ui.Button("Tomar foto", true);
+            take.Clicked += async (_, _) => await Run(TakePhotoAsync);
+            take.IsVisible = MediaPicker.Default.IsCaptureSupported;
             var clear = Ui.Button("Quitar fotos", true);
             clear.Clicked += (_, _) => { photos.Clear(); previews.Clear(); };
             Body.Add(Ui.Card(new VerticalStackLayout { Spacing = 10, Children = {
-                new ScrollView { Orientation = ScrollOrientation.Horizontal, Content = previews }, pick, clear,
+                new ScrollView { Orientation = ScrollOrientation.Horizontal, Content = previews }, take, pick, clear,
                 Ui.Text("De 3 a 5 fotos · JPG o PNG · máximo 5 MB cada una. La primera será la portada.", 12, color: Ui.Muted) } }, true));
         }
         Body.Add(Ui.Field("Nombre", name)); Body.Add(Ui.Field("Especie *", species));
@@ -51,6 +54,7 @@ public sealed class PetFormPage : FormPage
         Body.Add(Ui.Field("Sexo *", sex)); Body.Add(Ui.Field("Tamaño *", size));
         Body.Add(Ui.Field("Color", color)); Body.Add(Ui.Field("Estado de salud *", health));
         Body.Add(Ui.Field("Vacunas", vaccines)); Body.Add(Ui.Field("Ubicación *", location));
+        Body.Add(ActionButton("Usar mi ubicación actual", FillLocationAsync, true));
         Body.Add(Ui.Field("Comentario", comment));
         Body.Add(Ui.Text("La publicación dura 10 días. Puedes tener hasta 5 publicaciones activas.", 12, color: Ui.Muted));
         Body.Add(ActionButton(pet == null ? "Publicar mascota" : "Guardar cambios", async () =>
@@ -77,11 +81,46 @@ public sealed class PetFormPage : FormPage
         foreach (var result in results ?? [])
         {
             if (result == null) continue;
-            if (photos.Count == 5) throw new ArgumentException("Puedes agregar máximo 5 fotos.");
-            var data = await ReadPhotoAsync(result);
-            photos.Add(data);
-            previews.Add(new Image { Source = ImageSource.FromStream(() => new MemoryStream(data)), HeightRequest = 96, WidthRequest = 96, Aspect = Aspect.AspectFill });
+            AddPhoto(await ReadPhotoAsync(result));
         }
+    }
+
+    // La cámara entrega la foto redimensionada y comprimida para no superar el límite de 5 MB.
+    private async Task TakePhotoAsync()
+    {
+        if (photos.Count == 5) throw new ArgumentException("Puedes agregar máximo 5 fotos.");
+        if (await Permissions.RequestAsync<Permissions.Camera>() != PermissionStatus.Granted)
+            throw new InvalidOperationException("Activa el permiso de cámara en los ajustes del teléfono para tomar fotos.");
+        var result = await MediaPicker.Default.CapturePhotoAsync(new MediaPickerOptions
+        {
+            Title = "Foto de la mascota", MaximumWidth = 1600, MaximumHeight = 1600, CompressionQuality = 85
+        });
+        if (result != null) AddPhoto(await ReadPhotoAsync(result));
+    }
+
+    // GPS del teléfono + dirección aproximada desde OpenStreetMap. El usuario puede corregirla.
+    private async Task FillLocationAsync()
+    {
+        if (await Permissions.RequestAsync<Permissions.LocationWhenInUse>() != PermissionStatus.Granted)
+            throw new InvalidOperationException("Activa el permiso de ubicación en los ajustes del teléfono o escribe la ubicación a mano.");
+        Location? here;
+        try
+        {
+            here = await Geolocation.Default.GetLocationAsync(new GeolocationRequest(GeolocationAccuracy.Best, TimeSpan.FromSeconds(20)))
+                ?? await Geolocation.Default.GetLastKnownLocationAsync();
+        }
+        catch (FeatureNotEnabledException) { throw new InvalidOperationException("Enciende la ubicación del teléfono e intenta de nuevo."); }
+        if (here == null) throw new InvalidOperationException("No se pudo obtener tu ubicación. Escríbela a mano.");
+        location.Text = await AppServices.Places.DescribeAsync(here.Latitude, here.Longitude);
+        if (here.Accuracy is > 100)
+            Status.Text = "La señal GPS es débil y la ubicación puede ser aproximada. Revísala antes de publicar.";
+    }
+
+    private void AddPhoto(byte[] data)
+    {
+        if (photos.Count == 5) throw new ArgumentException("Puedes agregar máximo 5 fotos.");
+        photos.Add(data);
+        previews.Add(new Image { Source = ImageSource.FromStream(() => new MemoryStream(data)), HeightRequest = 96, WidthRequest = 96, Aspect = Aspect.AspectFill });
     }
 
     private static async Task<byte[]> ReadPhotoAsync(FileResult file)

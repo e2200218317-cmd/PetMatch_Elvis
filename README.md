@@ -158,3 +158,15 @@ La limpieza de cuenta incluida contempla los buckets `avatars` y `pet-photos`, c
 5. Sustituir las pantallas `IntegrationPage` por las de cada responsable.
 6. Añadir políticas de seguridad, limpieza de fotos y expiración.
 7. Probar juntos: visitante → registro → publicar → ver detalle → interés → notificación → adopción o vencimiento.
+
+## Scripts de base de datos
+
+Ejecutar en el SQL Editor del proyecto común, en este orden. Antes de `04`, activar Cron (Integrations → Cron).
+
+| Script | Responsable | Contenido |
+|---|---|---|
+| `01_usuarios_perfiles.sql` | Elvis | Perfiles, contactos, avatares y eliminación de cuenta |
+| `02_catalogo_mascotas.sql` | Elvis | Tabla `mascotas` y catálogo público |
+| `03_publicaciones.sql` | Dylan | Publicar con 3 a 5 fotos, editar, renovar y eliminar |
+| `04_solicitudes_notificaciones.sql` | Dylan | Solicitudes, notificaciones y vencimiento a los 10 días |
+| `05_detalle_mascota.sql` | David | Detalle de la mascota con sus fotos y solicitudes enviadas |

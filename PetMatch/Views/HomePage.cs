@@ -1,66 +1,45 @@
-using PetMatch.Core;
 using PetMatch.Services;
 
 namespace PetMatch.Views;
 
 public sealed class HomePage : FormPage
 {
-    private const int PageSize = 12;
-    private readonly VerticalStackLayout catalog = new() { Spacing = 14 };
-    private readonly Button loadMore;
-    private int offset;
-    private bool loaded;
+    private static bool Visitor => AppServices.Api.Session == null;
 
-    public HomePage() : base("Inicio", "Encuentra un nuevo compañero", "Historias que empiezan con una adopción. Nunca con una venta.")
+    public HomePage() : base("PetMatch", Visitor ? "Un hogar puede cambiar una vida" : "¡Qué bueno verte!",
+        Visitor ? "Encuentra mascotas que buscan una familia o publica para ayudarles a encontrarla."
+                : "Explora el catálogo o administra tu cuenta y tus publicaciones.")
     {
-        Body.Add(ActionButton(AppServices.Api.Session == null ? "Iniciar sesión" : "Ir a mi perfil",
-            () => AppFlow.RequireAsync(this, () => new ProfilePage())));
-        if (AppServices.Api.Session == null)
-            Body.Add(ActionButton("Crear una cuenta", () => Navigation.PushAsync(new RegisterPage()), true));
-
-        Body.Add(Ui.Text("Mascotas en adopción", 22, true));
-        Body.Add(catalog);
-        loadMore = ActionButton("Reintentar", LoadPageAsync, true);
-        Body.Add(loadMore);
+        BackgroundColor = Color.FromArgb("#F4F8F8");
+        Body.Padding = new Thickness(26, 48, 26, 32);
+        foreach (var label in Body.Children.OfType<Label>()) label.HorizontalTextAlignment = TextAlignment.Center;
+        if (Visitor) AddWelcome(); else AddMemberHome();
     }
 
-    protected override async void OnAppearing()
+    private void AddWelcome()
     {
-        base.OnAppearing();
-        if (!loaded)
-            await Run(LoadPageAsync);
+        Body.Add(Ui.Card(new VerticalStackLayout { Spacing = 10, Children =
+        {
+            ActionButton("Crear cuenta", () => Navigation.PushAsync(new RegisterPage(() => new HomePage()))),
+            ActionButton("Iniciar sesión", () => Navigation.PushAsync(new LoginPage(() => new HomePage())), true)
+        } }, true));
+        Body.Add(ActionButton("Explorar catálogo como visitante", () => Navigation.PushAsync(new CatalogPage()), true));
+        var note = Ui.Text("Puedes ver las publicaciones sin cuenta. Para enviar una solicitud o contactar a alguien, inicia sesión o regístrate.", 13, color: Ui.Muted);
+        note.HorizontalTextAlignment = TextAlignment.Center;
+        Body.Add(note);
     }
 
-    private async Task LoadPageAsync()
+    private void AddMemberHome()
     {
-        var pets = await AppServices.Api.CatalogAsync(offset, PageSize + 1);
-        foreach (var pet in pets.Take(PageSize))
-            catalog.Add(PetCard(pet));
-
-        if (offset == 0 && pets.Count == 0)
-            catalog.Add(Ui.Card(Ui.Text("No hay mascotas disponibles para adopción por el momento.", color: Ui.Muted), true));
-
-        offset += Math.Min(pets.Count, PageSize);
-        loaded = true;
-        loadMore.Text = "Ver más mascotas";
-        loadMore.IsVisible = pets.Count > PageSize;
-    }
-
-    private View PetCard(CatalogPet pet)
-    {
-        var name = string.IsNullOrWhiteSpace(pet.Nombre) ? pet.Especie : pet.Nombre;
-        var card = new VerticalStackLayout { Spacing = 8 };
-        if (Uri.TryCreate(pet.FotoUrl, UriKind.Absolute, out var photo) && photo.Scheme == Uri.UriSchemeHttps)
-            card.Add(new Image { Source = ImageSource.FromUri(photo), HeightRequest = 210, Aspect = Aspect.AspectFit });
-
-        card.Add(Ui.Text(name, 21, true));
-        card.Add(Ui.Text(pet.Ubicacion, color: Ui.Muted));
-        var facts = string.Join(" · ", new[] { pet.Especie, pet.Raza, pet.Edad, pet.Sexo }
-            .Where(value => !string.IsNullOrWhiteSpace(value)));
-        card.Add(Ui.Text(facts));
-        if (!string.IsNullOrWhiteSpace(pet.Descripcion))
-            card.Add(Ui.Text(pet.Descripcion));
-
-        return Ui.Card(card);
+        Body.Add(ActionButton("Explorar catálogo", () => Navigation.PushAsync(new CatalogPage())));
+        Body.Add(ActionButton("Mi perfil y publicaciones", () => AppFlow.RequireAsync(this, () => new ProfilePage()), true));
+        Body.Add(ActionButton("Mis solicitudes", () => AppFlow.RequireAsync(this, () => new MyAdoptionRequestsPage()), true));
+        Body.Add(ActionButton("Notificaciones", () => AppFlow.RequireAsync(this, () => new NotificationsPage()), true));
+        Body.Add(ActionButton("Cerrar sesión", async () =>
+        {
+            if (!await AppServices.Api.LogoutAsync())
+                await DisplayAlertAsync("Sesión cerrada en este dispositivo", "No se pudo confirmar el cierre con el servidor por un problema de conexión.", "Aceptar");
+            AppFlow.Home();
+        }, true));
     }
 }

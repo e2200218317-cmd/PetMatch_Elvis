@@ -33,7 +33,7 @@ public sealed class ProfilePage : FormPage
             details.Add(ActionButton("Publicar una mascota", () => AppFlow.RequireAsync(this, () => new PetFormPage())));
             details.Add(ActionButton("Mis mascotas publicadas", () => AppFlow.RequireAsync(this, () => new MyPetsPage()), true));
             details.Add(ActionButton("Solicitudes recibidas", () => AppFlow.RequireAsync(this, () => new ReceivedRequestsPage()), true));
-            details.Add(ActionButton("Mascotas de interés", () => AppFlow.RequireAsync(this, () => new IntegrationPage("Mascotas de interés", "David")), true));
+            details.Add(ActionButton("Mascotas de interés", () => AppFlow.RequireAsync(this, () => new MyAdoptionRequestsPage()), true));
             details.Add(ActionButton("Notificaciones", () => AppFlow.RequireAsync(this, () => new NotificationsPage()), true));
             details.Add(ActionButton("Eliminar mi cuenta", () => Navigation.PushAsync(new DeleteAccountPage()), danger: true));
             try

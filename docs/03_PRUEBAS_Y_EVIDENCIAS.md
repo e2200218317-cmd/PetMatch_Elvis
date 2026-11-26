@@ -77,3 +77,45 @@ Usa dos cuentas de prueba para verificar aislamiento. No pruebes RLS solamente d
 ## Explicación breve para tu exposición
 
 Mi módulo permite registrar usuarios mayores de 18 años, confirmar su correo, iniciar sesión, recuperar la contraseña y administrar su perfil. Supabase Auth gestiona las credenciales; PostgreSQL guarda los datos del perfil y Storage guarda las fotografías. Las tablas se relacionan mediante el UUID del usuario. Las políticas RLS protegen la información privada, y la sesión se conserva de forma segura en el dispositivo. Dejé un mecanismo común para que los módulos de catálogo y publicaciones reconozcan al usuario autenticado.
+
+## Prueba de carga
+
+`tests/PetMatch.Carga` simula usuarios simultáneos que abren el catálogo público usando el mismo cliente de la app (`SupabaseApi`).
+
+```
+dotnet run --project tests/PetMatch.Carga -- <url_supabase> <clave_publica> [usuarios] [rondas]
+```
+
+Resultado del 25/11/2026 contra el proyecto de Supabase del equipo (plan gratuito), desde una red doméstica:
+
+| Usuarios simultáneos | Rondas | Solicitudes | Errores | Promedio | p95 |
+|---|---|---|---|---|---|
+| 50 | 3 | 150 | 0 | 402 ms | 1096 ms |
+| 100 | 3 | 300 | 0 | 262 ms | 498 ms |
+
+La primera ronda es más lenta porque incluye abrir las conexiones seguras (TLS); las siguientes reutilizan la conexión y bajan a unos 200 ms.
+
+## Prueba de conectividad
+
+Con el teléfono en modo avión, abrir cada pantalla y anotar el resultado. La app no debe cerrarse y debe mostrar un mensaje claro; al reconectar, el botón de reintento o volver a abrir la pantalla debe cargar los datos.
+
+| Pantalla | Sin Internet | Al reconectar |
+|---|---|---|
+| Inicio (arranque) | | |
+| Catálogo | | |
+| Detalle de mascota | | |
+| Iniciar sesión | | |
+| Mi perfil | | |
+| Publicar (fotos, cámara y ubicación) | | |
+| Mis publicaciones | | |
+| Solicitudes recibidas | | |
+| Mis solicitudes | | |
+| Notificaciones | | |
+
+## Sensores y servicio externo
+
+| Requisito | Dónde | Cómo probar |
+|---|---|---|
+| Cámara | Publicar → «Tomar foto» | Tomar una foto, ver la miniatura y publicar |
+| GPS | Publicar → «Usar mi ubicación actual» | Aceptar el permiso; el campo Ubicación se llena con ciudad y sector |
+| Servicio web externo | OpenStreetMap Nominatim (`PetMatch.Core/PlaceLookup.cs`) | Convierte las coordenadas del GPS en una dirección legible |

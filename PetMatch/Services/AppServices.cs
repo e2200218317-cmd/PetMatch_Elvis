@@ -7,6 +7,7 @@ public static class AppServices
 {
     public static SupabaseApi Api { get; } = new(new HttpClient { Timeout = TimeSpan.FromSeconds(30) },
         new MauiSessionStore(), SupabaseConfig.Url, SupabaseConfig.PublicKey);
+    public static PlaceLookup Places { get; } = new(new HttpClient { Timeout = TimeSpan.FromSeconds(15) });
 }
 
 public sealed class MauiSessionStore : ISessionStore

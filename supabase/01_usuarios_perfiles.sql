@@ -7,7 +7,7 @@ create table if not exists public.perfiles (
   nombres text not null check (char_length(btrim(nombres)) between 2 and 80),
   apellidos text not null check (char_length(btrim(apellidos)) between 2 and 80),
   ciudad text not null check (char_length(btrim(ciudad)) between 2 and 100),
-  avatar_path text not null,
+  avatar_path text,
   creado_en timestamptz not null default now(),
   actualizado_en timestamptz not null default now()
 );
@@ -94,9 +94,9 @@ begin
   if p_celular is null or p_celular !~ '^\+5939[0-9]{8}$' then
     raise exception 'PETMATCH: El celular debe usar el formato +5939XXXXXXXX.';
   end if;
-  if p_avatar_path is null or split_part(p_avatar_path, '/', 1) <> v_id::text
-     or not exists(select 1 from storage.objects where bucket_id = 'avatars' and name = p_avatar_path) then
-    raise exception 'PETMATCH: Sube tu foto de perfil antes de guardar.';
+  if p_avatar_path is not null and (split_part(p_avatar_path, '/', 1) <> v_id::text
+     or not exists(select 1 from storage.objects where bucket_id = 'avatars' and name = p_avatar_path)) then
+    raise exception 'PETMATCH: La foto de perfil no es válida.';
   end if;
   select * into v_anterior from public.perfiles_privados where usuario_id = v_id;
   if found and (v_anterior.cedula <> p_cedula or v_anterior.fecha_nacimiento <> p_fecha_nacimiento) then

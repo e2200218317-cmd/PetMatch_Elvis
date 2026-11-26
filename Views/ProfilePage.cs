@@ -29,13 +29,23 @@ public sealed class ProfilePage : FormPage
                 Ui.Text("Dirección: " + p.direccion), Ui.Text("Celular: " + p.celular),
                 Ui.Text("Cédula: " + p.cedula), Ui.Text("Fecha de nacimiento: " + p.fecha_nacimiento.ToString("dd/MM/yyyy"))
             } }, true));
-            details.Add(ActionButton("Editar mi perfil", () => Navigation.PushAsync(new ProfileFormPage(p)), true));
-            details.Add(ActionButton("Publicar una mascota", () => AppFlow.RequireAsync(this, () => new PetFormPage())));
-            details.Add(ActionButton("Mis mascotas publicadas", () => AppFlow.RequireAsync(this, () => new MyPetsPage()), true));
-            details.Add(ActionButton("Solicitudes recibidas", () => AppFlow.RequireAsync(this, () => new ReceivedRequestsPage()), true));
-            details.Add(ActionButton("Mascotas de interés", () => AppFlow.RequireAsync(this, () => new MyAdoptionRequestsPage()), true));
-            details.Add(ActionButton("Notificaciones", () => AppFlow.RequireAsync(this, () => new NotificationsPage()), true));
-            details.Add(ActionButton("Eliminar mi cuenta", () => Navigation.PushAsync(new DeleteAccountPage()), danger: true));
+            var menuItems = new VerticalStackLayout { Spacing = 9, IsVisible = false };
+            Button menuToggle = null!;
+            menuToggle = ActionButton("☰  Opciones de perfil  ▾", () =>
+            {
+                menuItems.IsVisible = !menuItems.IsVisible;
+                MenuToggleText(menuToggle, menuItems.IsVisible);
+                return Task.CompletedTask;
+            }, true);
+            menuItems.Add(ActionButton("Editar mi perfil", () => Navigation.PushAsync(new ProfileFormPage(p)), true));
+            menuItems.Add(ActionButton("Publicar una mascota", () => AppFlow.RequireAsync(this, () => new PetFormPage())));
+            menuItems.Add(ActionButton("Mis mascotas publicadas", () => AppFlow.RequireAsync(this, () => new MyPetsPage()), true));
+            menuItems.Add(ActionButton("Solicitudes recibidas", () => AppFlow.RequireAsync(this, () => new ReceivedRequestsPage()), true));
+            menuItems.Add(ActionButton("Mascotas de interés", () => AppFlow.RequireAsync(this, () => new MyAdoptionRequestsPage()), true));
+            menuItems.Add(ActionButton("Notificaciones", () => AppFlow.RequireAsync(this, () => new NotificationsPage()), true));
+            menuItems.Add(ActionButton("Eliminar mi cuenta", () => Navigation.PushAsync(new DeleteAccountPage()), danger: true));
+            details.Add(menuToggle);
+            details.Add(Ui.Card(menuItems, true));
             try
             {
                 var signed = await AppServices.Api.AvatarUrlAsync(p.avatar_path);
@@ -51,4 +61,7 @@ public sealed class ProfilePage : FormPage
             AppFlow.Home();
         }, true));
     }
+
+    private static void MenuToggleText(Button button, bool expanded) =>
+        button.Text = expanded ? "☰  Opciones de perfil  ▴" : "☰  Opciones de perfil  ▾";
 }

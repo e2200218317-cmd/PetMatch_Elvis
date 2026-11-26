@@ -104,7 +104,7 @@ public sealed partial class SupabaseApi
     public async Task<IReadOnlyList<AppNotification>> NotificationsAsync()
     {
         var json = await AuthorizedAsync(HttpMethod.Get,
-            "/rest/v1/notificaciones?select=id,mensaje,leida,creado_en&order=creado_en.desc&limit=50");
+            "/rest/v1/notificaciones?select=id,mascota_id,mensaje,leida,creado_en&order=creado_en.desc&limit=50");
         return JsonSerializer.Deserialize<List<AppNotification>>(json, Json) ?? [];
     }
 

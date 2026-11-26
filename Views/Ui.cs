@@ -26,14 +26,29 @@ public static class Ui
         StrokeShape = new RoundRectangle { CornerRadius = 18 },
         BackgroundColor = tinted ? Color.FromArgb("#EEF9FF") : Colors.White
     };
-    public static View Field(string label, View input) => new VerticalStackLayout
+    public static View Field(string label, View input)
     {
-        Spacing = 6, Children = { Text(label, 13, true), new Border
+        bool selectable = input is Picker or DatePicker;
+        if (selectable) input.HeightRequest = 54;
+        return new VerticalStackLayout
         {
-            Content = input, Padding = new Thickness(12, 0), BackgroundColor = Color.FromArgb("#F8FAFC"),
-            Stroke = Color.FromArgb("#DCE5EB"), StrokeShape = new RoundRectangle { CornerRadius = 12 }
-        } }
-    };
+            Spacing = 6,
+            Children =
+            {
+                Text(selectable ? $"{label} · Toca para elegir" : label, 13, true,
+                    selectable ? Color.FromArgb("#075985") : null),
+                new Border
+                {
+                    Content = input,
+                    Padding = new Thickness(12, 0),
+                    BackgroundColor = selectable ? Color.FromArgb("#E0F2FE") : Color.FromArgb("#F8FAFC"),
+                    Stroke = selectable ? Color.FromArgb("#38BDF8") : Color.FromArgb("#DCE5EB"),
+                    StrokeThickness = selectable ? 1.5 : 1,
+                    StrokeShape = new RoundRectangle { CornerRadius = 12 }
+                }
+            }
+        };
+    }
     public static Button Button(string text, bool secondary = false, bool danger = false) => new()
     {
         Text = text, FontSize = 15, FontAttributes = FontAttributes.Bold, CornerRadius = 14,

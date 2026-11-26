@@ -41,6 +41,8 @@ Usa un proyecto nuevo para esta práctica o el proyecto nuevo que acuerde el equ
 5. En **Table Editor**, verifica `perfiles`, `perfiles_privados`, `contactos_perfil` y `cuentas_en_eliminacion`.
 6. En **Storage**, verifica que existe `avatars`, privado, con máximo 5 MB por imagen.
 
+Si el proyecto ya tenía ejecutadas las migraciones `01` a `05`, ejecuta también `supabase/06_fotos_mas_flexibles.sql` una sola vez. Esta actualización conserva los perfiles existentes, vuelve opcional la foto de perfil y permite publicar con una foto de mascota como mínimo.
+
 `auth.users` ya pertenece a Supabase Auth. No debes crear una tabla de contraseñas ni insertar allí manualmente al usuario.
 
 Si se ejecuta otra vez en el mismo esquema intacto, el SQL conserva los datos y vuelve a definir funciones y políticas del módulo. Revisa previamente otras políticas si el equipo ya añadió permisos: en PostgreSQL las políticas permisivas pueden combinarse y ampliar accesos.
@@ -135,12 +137,12 @@ dotnet build PetMatch/PetMatch.csproj -f net10.0-android -m:1 \
 
 1. Abre la app: verás el inicio y los botones para acceder o registrarte.
 2. Entra en **Crear una cuenta**.
-3. Escribe correo, contraseña y confirmación; completa los datos y selecciona una imagen JPG/PNG.
+3. Escribe correo, contraseña y confirmación; completa los datos. La foto de perfil es opcional.
 4. Usa fecha de nacimiento correspondiente a una persona mayor de 18 años. La cédula se valida como 10 dígitos y única; **no se consulta al Registro Civil ni se verifica oficialmente la identidad**.
 5. Pulsa **Crear mi cuenta**. Copia el código del correo y confirma.
-6. La app sube la foto, guarda el perfil completo y abre **Mi perfil**.
+6. La app sube la foto si elegiste una, guarda el perfil y abre directamente el **Catálogo**.
 7. Edita dirección o celular y comprueba que el cambio permanece al volver a entrar.
-8. Cierra y abre la app. La sesión se recupera; pulsa **Ir a mi perfil**.
+8. Cierra y abre la app. La sesión se recupera y abre el **Catálogo**.
 9. Cierra sesión. Prueba **Recuperar contraseña**, verifica el código y cambia la clave.
 10. Inicia sesión con la clave nueva. Para comprobar la baja, utiliza exclusivamente una cuenta creada para esa prueba.
 
@@ -158,7 +160,7 @@ El registro de Auth y la carga de imagen no forman una única transacción de re
 | Código vencido | Solicita uno nuevo y usa el último recibido |
 | Error 404 al eliminar | Despliega `delete-account` con ese nombre |
 | Error de permisos/RLS | Ejecuta el SQL completo y comprueba que el usuario inició sesión |
-| Foto rechazada | JPG o PNG, máximo 5 MB; otra carpeta no está permitida |
+| Foto rechazada | Si seleccionas una foto, debe ser JPG o PNG y pesar máximo 5 MB |
 | Cédula ya registrada | Prueba con tu propia cédula o con una cuenta de prueba diferente |
 | Android SDK/JDK no encontrado | Configura las rutas en la extensión MAUI |
 | Inicio carga pero no hay mascotas | El catálogo real es el módulo de David, pendiente de integración |

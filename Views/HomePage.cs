@@ -113,7 +113,7 @@ public sealed class HomePage : ContentPage
         });
         content.Add(new Label
         {
-            Text = "¡Qué bueno verte!",
+            Text = "Inicio",
             FontSize = 30,
             FontAttributes = FontAttributes.Bold,
             TextColor = Ink,
@@ -121,7 +121,7 @@ public sealed class HomePage : ContentPage
         });
         content.Add(new Label
         {
-            Text = "Explora el catálogo o administra tu cuenta y tus publicaciones.",
+            Text = "Explora mascotas en adopción y administra tu cuenta desde el menú.",
             FontSize = 15,
             TextColor = Muted,
             HorizontalTextAlignment = TextAlignment.Center
@@ -131,17 +131,22 @@ public sealed class HomePage : ContentPage
         catalog.Clicked += async (_, _) => await Navigation.PushAsync(new SupabaseHomePage());
         content.Add(catalog);
 
+        var menuItems = new VerticalStackLayout { Spacing = 9, IsVisible = false };
+        var menuToggle = Ui.Button("☰  Mi cuenta  ▾", secondary: true);
+        menuToggle.Clicked += (_, _) =>
+        {
+            menuItems.IsVisible = !menuItems.IsVisible;
+            menuToggle.Text = menuItems.IsVisible ? "☰  Mi cuenta  ▴" : "☰  Mi cuenta  ▾";
+        };
         var profile = Ui.Button("Mi perfil y publicaciones", secondary: true);
         profile.Clicked += async (_, _) => await AppFlow.RequireAsync(this, () => new ProfilePage());
-        content.Add(profile);
-
+        menuItems.Add(profile);
         var requests = Ui.Button("Mis solicitudes", secondary: true);
         requests.Clicked += async (_, _) => await AppFlow.RequireAsync(this, () => new MyAdoptionRequestsPage());
-        content.Add(requests);
-
+        menuItems.Add(requests);
         var notifications = Ui.Button("Notificaciones", secondary: true);
         notifications.Clicked += async (_, _) => await AppFlow.RequireAsync(this, () => new NotificationsPage());
-        content.Add(notifications);
+        menuItems.Add(notifications);
 
         var signOut = Ui.Button("Cerrar sesión", secondary: true);
         signOut.Clicked += async (_, _) =>
@@ -149,7 +154,9 @@ public sealed class HomePage : ContentPage
             await AppServices.Api.LogoutAsync();
             AppFlow.Home();
         };
-        content.Add(signOut);
+        menuItems.Add(signOut);
+        content.Add(menuToggle);
+        content.Add(Ui.Card(menuItems, true));
 
         return new ScrollView
         {

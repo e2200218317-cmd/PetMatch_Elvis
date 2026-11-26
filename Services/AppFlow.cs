@@ -10,7 +10,7 @@ public static class AppFlow
         BarBackgroundColor = Colors.White, BarTextColor = Color.FromArgb("#111827")
     };
     public static void Reset(Page page) => Application.Current!.Windows[0].Page = Wrap(page);
-    public static void Home() => Reset(new HomePage());
+    public static void Home() => Reset(AppServices.Api.Session == null ? new HomePage() : new SupabaseHomePage());
 
     // David y Dylan deben llamar a este método antes de entrar en una pantalla protegida.
     public static async Task RequireAsync(Page origin, Func<Page> destination)
@@ -29,7 +29,7 @@ public static class AppFlow
         var profile = await AppServices.Api.MyProfileAsync();
         if (profile == null)
         {
-            if (draft != null && photo != null)
+            if (draft != null)
             {
                 try { await AppServices.Api.SaveProfileAsync(draft, photo); }
                 catch (Exception e) when (e is ArgumentException or ApiException or IOException)
@@ -39,6 +39,6 @@ public static class AppFlow
             }
             else { Reset(new ProfileFormPage(null, destination)); return; }
         }
-        Reset(profile?.eliminando == true ? new ProfilePage() : destination?.Invoke() ?? new ProfilePage());
+        Reset(profile?.eliminando == true ? new ProfilePage() : destination?.Invoke() ?? new SupabaseHomePage());
     }
 }

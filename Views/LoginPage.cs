@@ -14,13 +14,18 @@ public sealed class LoginPage : FormPage
         {
             var mail = Validation.Email(email.Text);
             if (string.IsNullOrEmpty(password.Text)) throw new ArgumentException("Escribe tu contraseña.");
-            await AppServices.Api.LoginAsync(mail, password.Text); password.Text = "";
+            try { await AppServices.Api.LoginAsync(mail, password.Text); }
+            catch (ApiException e) when (e.Code == "email_not_confirmed")
+            {
+                await Navigation.PushAsync(new ConfirmEmailPage(mail, destination));
+                return;
+            }
+            password.Text = "";
             await AppFlow.AfterLoginAsync(destination);
         }));
         Body.Add(ActionButton("Recuperar contraseña", () => Navigation.PushAsync(new RecoveryPage()), true));
         Body.Add(Ui.Text("¿Todavía no tienes una cuenta?", color: Ui.Muted));
         Body.Add(ActionButton("Registrarme como usuario nuevo", () => Navigation.PushAsync(new RegisterPage(destination)), true));
-        Body.Add(ActionButton("Confirmar mi correo", () => Navigation.PushAsync(new ConfirmEmailPage(email.Text ?? "", destination)), true));
         Body.Add(ActionButton("Volver al inicio", () => { AppFlow.Home(); return Task.CompletedTask; }, true));
     }
 }

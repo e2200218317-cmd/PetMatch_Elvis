@@ -9,7 +9,7 @@ public sealed class ProfileFormPage : FormPage
     private string? initialError;
     public ProfileFormPage(UserProfile? profile, Func<Page>? destination = null, UserProfile? draft = null, byte[]? photo = null, string? error = null)
         : base(profile == null ? "Completar perfil" : "Editar perfil", profile == null ? "Un último paso" : "Tu información",
-            profile == null ? "Completa tus datos y foto para usar tu cuenta." : "Actualiza tus datos de contacto y tu fotografía.")
+            profile == null ? "Completa tus datos para usar tu cuenta. La foto de perfil es opcional." : "Actualiza tus datos de contacto. La foto es opcional.")
     {
         fields = new ProfileFields(profile ?? draft, profile != null, photo);
         fields.PickPhotoButton.Clicked += async (_, _) => await Run(fields.PickPhotoAsync);
@@ -17,7 +17,7 @@ public sealed class ProfileFormPage : FormPage
         Body.Add(ActionButton("Guardar perfil", async () =>
         {
             await AppServices.Api.SaveProfileAsync(fields.Read(), fields.NewPhoto);
-            AppFlow.Reset(destination?.Invoke() ?? new ProfilePage());
+            AppFlow.Reset(destination?.Invoke() ?? (profile == null ? new SupabaseHomePage() : new ProfilePage()));
         }));
         Body.Add(ActionButton("Cerrar sesión", async () => { await AppServices.Api.LogoutAsync(); AppFlow.Home(); }, true));
         if (profile == null) Body.Add(ActionButton("Eliminar esta cuenta", () => Navigation.PushAsync(new DeleteAccountPage()), danger: true));

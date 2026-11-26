@@ -1,5 +1,5 @@
 -- PETMATCH / Dylan Jaramillo. Ejecutar después de 01 y 02 en el mismo proyecto.
--- Publicación de mascotas: datos, fotos (3 a 5), límite de 5 activas, edición, renovación y borrado.
+-- Publicación de mascotas: datos, fotos (1 a 5), límite de 5 activas, edición, renovación y borrado.
 begin;
 
 alter table public.mascotas
@@ -124,8 +124,8 @@ begin
   if not public.cuenta_disponible(v_id) then raise exception 'PETMATCH: La cuenta se está eliminando.'; end if;
   perform public.validar_mascota(p_nombre, p_especie, p_raza, p_edad, p_sexo, p_tamano,
     p_color, p_salud, p_vacunas, p_ubicacion, p_descripcion);
-  if v_total not between 3 and 5 or (select count(distinct x) from unnest(p_fotos) x) <> v_total then
-    raise exception 'PETMATCH: Agrega entre 3 y 5 fotos distintas.';
+  if v_total not between 1 and 5 or (select count(distinct x) from unnest(p_fotos) x) <> v_total then
+    raise exception 'PETMATCH: Agrega entre 1 y 5 fotos distintas.';
   end if;
   if exists(select 1 from unnest(p_fotos) x where split_part(x, '/', 1) <> v_id::text
      or not exists(select 1 from storage.objects o where o.bucket_id = 'pet-photos' and o.name = x)) then

@@ -5,12 +5,14 @@ namespace PetMatch.Views;
 
 public sealed class RegisterPage : FormPage
 {
-    public RegisterPage(Func<Page>? destination = null) : base("Registro", "Tu historia empieza aquí", "Crea una cuenta para adoptar o encontrar un hogar para una mascota.")
+    public RegisterPage(Func<Page>? destination = null, string? initialEmail = null,
+        UserProfile? initialProfile = null, byte[]? pendingPhoto = null)
+        : base("Registro", "Tu historia empieza aquí", "Crea una cuenta para adoptar o encontrar un hogar para una mascota.")
     {
-        var email = Ui.Input("tu@correo.com", Keyboard.Email);
+        var email = Ui.Input("tu@correo.com", Keyboard.Email); email.Text = initialEmail;
         var password = Ui.Input("Mínimo 8 caracteres", password: true);
         var confirm = Ui.Input("Repite tu contraseña", password: true);
-        var fields = new ProfileFields();
+        var fields = new ProfileFields(initialProfile, pendingPhoto: pendingPhoto);
         fields.PickPhotoButton.Clicked += async (_, _) => await Run(fields.PickPhotoAsync);
         Body.Add(Ui.Field("Correo electrónico *", email)); Body.Add(Ui.Field("Contraseña *", password));
         Body.Add(Ui.Text("Usa mayúscula, minúscula y número; de 8 a 72 caracteres.", 12, color: Ui.Muted));

@@ -37,7 +37,7 @@ public static class Validation
         return digits;
     }
 
-    public static void Profile(UserProfile p, bool hasPhoto, DateTime? today = null)
+    public static void Profile(UserProfile p, bool hasPhoto = true, DateTime? today = null)
     {
         p.nombres = p.nombres.Trim(); p.apellidos = p.apellidos.Trim();
         p.ciudad = p.ciudad.Trim(); p.direccion = p.direccion.Trim(); p.cedula = p.cedula.Trim();
@@ -50,7 +50,6 @@ public static class Validation
         if (p.ciudad.Length is < 2 or > 100 || p.direccion.Length is < 5 or > 250)
             throw new ArgumentException("Completa la ciudad y una dirección de 5 a 250 caracteres.");
         p.celular = Phone(p.celular);
-        if (!hasPhoto) throw new ArgumentException("Selecciona una foto de perfil.");
     }
 
     public static readonly string[] Species = ["Perro", "Gato", "Otro"];
@@ -78,7 +77,7 @@ public static class Validation
 
     public static void PetPhotos(IReadOnlyList<byte[]> photos)
     {
-        if (photos.Count is < 3 or > 5) throw new ArgumentException("Agrega entre 3 y 5 fotos de la mascota.");
+        if (photos.Count is < 1 or > 5) throw new ArgumentException("Agrega al menos 1 foto y máximo 5 fotos de la mascota.");
         foreach (var photo in photos) ImageType(photo);
     }
 

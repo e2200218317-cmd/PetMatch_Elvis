@@ -22,11 +22,12 @@ public sealed class PetFormPage : FormPage
     private readonly List<byte[]> photos = [];
 
     private static Picker Choice(string title, string[] options) =>
-        new() { Title = title, ItemsSource = options, TextColor = Ui.Ink, TitleColor = Ui.Muted, FontSize = 16 };
+        new() { Title = title, ItemsSource = options, TextColor = Ui.Ink, TitleColor = Color.FromArgb("#0369A1"),
+            BackgroundColor = Color.FromArgb("#E0F2FE"), FontSize = 16, FontAttributes = FontAttributes.Bold };
 
     public PetFormPage(PetPost? pet = null)
         : base(pet == null ? "Publicar" : "Editar publicación", pet == null ? "Busca un hogar" : "Tu publicación",
-            pet == null ? "Completa los datos y agrega de 3 a 5 fotos." : "Actualiza los datos de la mascota. Las fotos no cambian.")
+            pet == null ? "Completa los datos y agrega al menos una foto de la mascota." : "Actualiza los datos de la mascota. Las fotos no cambian.")
     {
         name.MaxLength = breed.MaxLength = color.MaxLength = 60; age.MaxLength = 30;
         health.MaxLength = vaccines.MaxLength = 200; location.MaxLength = 120;
@@ -44,7 +45,7 @@ public sealed class PetFormPage : FormPage
             clear.Clicked += (_, _) => { photos.Clear(); previews.Clear(); };
             Body.Add(Ui.Card(new VerticalStackLayout { Spacing = 10, Children = {
                 new ScrollView { Orientation = ScrollOrientation.Horizontal, Content = previews }, pick, clear,
-                Ui.Text("De 3 a 5 fotos · JPG o PNG · máximo 5 MB cada una. La primera será la portada.", 12, color: Ui.Muted) } }, true));
+                Ui.Text("De 1 a 5 fotos · JPG o PNG · máximo 5 MB cada una. La primera será la portada.", 12, color: Ui.Muted) } }, true));
         }
         Body.Add(Ui.Field("Nombre", name)); Body.Add(Ui.Field("Especie *", species));
         Body.Add(Ui.Field("Raza *", breed)); Body.Add(Ui.Field("Edad *", age));

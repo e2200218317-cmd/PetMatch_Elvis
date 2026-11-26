@@ -20,7 +20,7 @@ public sealed class ProfileFields : VerticalStackLayout
     private readonly Image preview = new() { Source = "paw.png", HeightRequest = 120, WidthRequest = 120, Aspect = Aspect.AspectFill };
     private readonly UserProfile initial;
     public byte[]? NewPhoto { get; private set; }
-    public Button PickPhotoButton { get; } = Ui.Button("Elegir foto de perfil", true);
+    public Button PickPhotoButton { get; } = Ui.Button("Elegir foto de perfil (opcional)", true);
 
     public ProfileFields(UserProfile? value = null, bool edit = false, byte[]? pendingPhoto = null)
     {
@@ -30,7 +30,7 @@ public sealed class ProfileFields : VerticalStackLayout
         identity.Text = initial.cedula; city.Text = initial.ciudad; address.Text = initial.direccion; phone.Text = initial.celular;
         identity.IsReadOnly = edit; birth.IsEnabled = !edit;
         Add(Ui.Card(new VerticalStackLayout { Spacing = 10, Children = { preview, PickPhotoButton,
-            Ui.Text("Foto obligatoria · JPG o PNG · máximo 5 MB", 12, color: Ui.Muted) } }, true));
+            Ui.Text("Foto opcional · JPG o PNG · máximo 5 MB. Si no agregas una, usaremos el ícono de PetMatch.", 12, color: Ui.Muted) } }, true));
         Add(Ui.Field("Nombres *", names)); Add(Ui.Field("Apellidos *", lastNames));
         Add(Ui.Field("Fecha de nacimiento * · mínimo 18 años", birth)); Add(Ui.Field("Cédula * · dato privado", identity));
         Add(Ui.Field("Ciudad *", city)); Add(Ui.Field("Dirección *", address)); Add(Ui.Field("Celular *", phone));
@@ -69,7 +69,7 @@ public sealed class ProfileFields : VerticalStackLayout
             nombres = names.Text ?? "", apellidos = lastNames.Text ?? "", fecha_nacimiento = birth.Date ?? DateTime.Today,
             cedula = identity.Text ?? "", ciudad = city.Text ?? "", direccion = address.Text ?? "", celular = phone.Text ?? ""
         };
-        Validation.Profile(value, NewPhoto != null || !string.IsNullOrEmpty(value.avatar_path));
+        Validation.Profile(value, hasPhoto: true);
         return value;
     }
 }

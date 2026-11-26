@@ -43,6 +43,7 @@ public sealed class ReceivedRequest
 public sealed class AppNotification
 {
     public Guid id { get; set; }
+    public Guid? mascota_id { get; set; }
     public string mensaje { get; set; } = "";
     public bool leida { get; set; }
     public DateTimeOffset creado_en { get; set; }

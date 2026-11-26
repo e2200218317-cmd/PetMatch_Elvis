@@ -68,10 +68,21 @@ public sealed partial class SupabaseApi(HttpClient http, ISessionStore store, st
         }
     }
 
-    public async Task<IReadOnlyList<CatalogPet>> CatalogAsync(int offset, int limit)
+    public async Task<IReadOnlyList<CatalogPet>> CatalogAsync(int offset, int limit, CatalogFilters? filters = null)
     {
         var path = "/rest/v1/mascotas?select=id,nombre,especie,raza,edad,sexo,ubicacion,descripcion,foto_url"
             + FormattableString.Invariant($"&order=creado_en.desc,id.desc&offset={offset}&limit={limit}");
+        if (filters != null)
+        {
+            var clauses = new List<string>();
+            if (!string.IsNullOrWhiteSpace(filters.Especie)) clauses.Add("especie=eq." + Uri.EscapeDataString(filters.Especie));
+            if (!string.IsNullOrWhiteSpace(filters.Sexo)) clauses.Add("sexo=eq." + Uri.EscapeDataString(filters.Sexo));
+            if (!string.IsNullOrWhiteSpace(filters.Raza))
+                clauses.Add("raza=ilike." + Uri.EscapeDataString("*" + filters.Raza.Trim() + "*"));
+            if (!string.IsNullOrWhiteSpace(filters.Lugar))
+                clauses.Add("ubicacion=ilike." + Uri.EscapeDataString("*" + filters.Lugar.Trim() + "*"));
+            if (clauses.Count > 0) path += "&" + string.Join("&", clauses);
+        }
         try
         {
             var json = await Request(HttpMethod.Get, path);
@@ -80,6 +91,20 @@ public sealed partial class SupabaseApi(HttpClient http, ISessionStore store, st
         catch (ApiException e) when (e.Status == 404)
         {
             throw new InvalidOperationException("El catálogo todavía no está configurado en Supabase.");
+        }
+    }
+
+    public async Task<IReadOnlyList<CatalogPet>> SearchCatalogAsync(CatalogFilters filters)
+    {
+        const int batchSize = 100;
+        var results = new List<CatalogPet>();
+        int offset = 0;
+        while (true)
+        {
+            var page = await CatalogAsync(offset, batchSize, filters);
+            results.AddRange(page);
+            if (page.Count < batchSize) return results;
+            offset += page.Count;
         }
     }
 
@@ -192,7 +217,7 @@ public sealed partial class SupabaseApi(HttpClient http, ISessionStore store, st
 
     public async Task SaveProfileAsync(UserProfile p, byte[]? newPhoto)
     {
-        Validation.Profile(p, newPhoto != null || !string.IsNullOrEmpty(p.avatar_path));
+        Validation.Profile(p, hasPhoto: true);
         string? uploaded = null;
         if (newPhoto != null)
         {
@@ -201,7 +226,7 @@ public sealed partial class SupabaseApi(HttpClient http, ISessionStore store, st
             await AuthorizedAsync(HttpMethod.Post, "/storage/v1/object/avatars/" + uploaded,
                 bytes: newPhoto, contentType: type == "jpg" ? "image/jpeg" : "image/png");
         }
-        string previous = p.avatar_path;
+        string? previous = p.avatar_path;
         try
         {
             await AuthorizedAsync(HttpMethod.Post, "/rest/v1/rpc/guardar_perfil", new
@@ -228,7 +253,7 @@ public sealed partial class SupabaseApi(HttpClient http, ISessionStore store, st
 
     public Task RemoveAvatarAsync(string path) => AuthorizedAsync(HttpMethod.Delete, "/storage/v1/object/avatars", new { prefixes = new[] { path } });
 
-    public async Task<string?> AvatarUrlAsync(string path)
+    public async Task<string?> AvatarUrlAsync(string? path)
     {
         if (string.IsNullOrWhiteSpace(path)) return null;
         var json = await AuthorizedAsync(HttpMethod.Post, "/storage/v1/object/sign/avatars/" + path, new { expiresIn = 300 });

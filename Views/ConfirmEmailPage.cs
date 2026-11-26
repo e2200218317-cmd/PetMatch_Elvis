@@ -23,7 +23,15 @@ public sealed class ConfirmEmailPage : FormPage
             await AppServices.Api.ResendSignupAsync(Validation.Email(email.Text));
             await DisplayAlertAsync("Correo", "Si la cuenta requiere confirmación, recibirás un código. Respeta el tiempo de espera entre envíos.", "Aceptar");
         }, true));
-        Body.Add(ActionButton("Ir a iniciar sesión", () => { AppFlow.Reset(new LoginPage(destination)); return Task.CompletedTask; }, true));
+        Body.Add(ActionButton("Cambiar correo / corregir datos", async () =>
+        {
+            bool proceed = await DisplayAlertAsync("Usar otro correo",
+                "Volverás al registro con tus datos precargados. La cuenta creada con el correo anterior permanecerá en Supabase; si no quieres conservarla, elimínala desde Authentication → Users.",
+                "Continuar", "Cancelar");
+            if (proceed) await Navigation.PushAsync(new RegisterPage(destination, email.Text, draft, photo));
+        }, true));
+        Body.Add(ActionButton("Iniciar sesión", () => { AppFlow.Reset(new LoginPage(destination)); return Task.CompletedTask; }, true));
+        Body.Add(ActionButton("Cancelar y volver a Inicio", () => { AppFlow.Home(); return Task.CompletedTask; }, true));
         Body.Add(Ui.Text("Si cierras la app antes de terminar, podrás confirmar el correo e ingresar; después completarás tu perfil.", 12, color: Ui.Muted));
     }
 }

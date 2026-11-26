@@ -31,7 +31,7 @@ erDiagram
 | Información | Visitante | Usuario con sesión |
 |---|---|---|
 | Nombres, apellidos, ciudad | Visible en perfil público | Visible |
-| Foto de perfil | Bucket privado; no descargar | URL temporal de foto vinculada |
+| Foto de perfil | Bucket privado; opcional, con ícono predeterminado si falta | URL temporal cuando existe |
 | Dirección y celular | Sin acceso | Puede consultar los contactos de perfiles activos |
 | Cédula y nacimiento | Sin acceso | Solo el titular |
 | Contraseña | Nunca disponible | Supabase Auth la administra |
@@ -136,14 +136,14 @@ La lectura anónima debe restringirse a mascotas disponibles y no vencidas, con 
 | Detalle con fotos, salud, raza, color y contacto | David |
 | Botón de interés y lista de intereses/solicitudes | David |
 | Máximo 5 publicaciones activas por usuario | Dylan; validación transaccional en servidor |
-| Entre 3 y 5 fotos por mascota | Dylan; app, Storage y finalización de publicación |
+| Entre 1 y 5 fotos por mascota | Dylan; app, Storage y finalización de publicación |
 | Nombre opcional; edad, raza, sexo, salud y ubicación | Dylan |
 | Vacunas opcionales y comentario de hasta 500 caracteres | Dylan |
 | Borrar publicación cuando se concreta la adopción | Dylan |
 | Avisos al propietario y revisión del interesado | Dylan + David |
 | Vencimiento a los 10 días, retiro del catálogo y aviso | Dylan / trabajo compartido de backend |
 
-Para garantizar el límite de cinco bajo peticiones simultáneas, no basta con contar filas en el teléfono. Usen una RPC/transacción con bloqueo por propietario. Las fotos pueden cargarse primero como borrador; la publicación se hace visible solo cuando el servidor confirma entre tres y cinco fotos.
+Para garantizar el límite de cinco bajo peticiones simultáneas, no basta con contar filas en el teléfono. Usen una RPC/transacción con bloqueo por propietario. Las fotos pueden cargarse primero como borrador; la publicación se hace visible solo cuando el servidor confirma entre una y cinco fotos.
 
 La expiración debe ejecutarse en el servidor mediante una tarea programada, incluso si la app está cerrada. Un filtro por `vence_en > now()` retira la mascota del catálogo inmediatamente, mientras una tarea completa la limpieza y crea el aviso. El texto del aviso debe indicar «venció el plazo de 10 días»; no afirmar que nadie respondió si sí hubo interesados. El usuario vuelve a publicar si la mascota sigue disponible.
 

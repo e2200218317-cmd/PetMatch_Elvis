@@ -28,7 +28,7 @@ public sealed class UserProfile
     public string celular { get; set; } = "";
     public string cedula { get; set; } = "";
     public DateTime fecha_nacimiento { get; set; } = DateTime.Today.AddYears(-18);
-    public string avatar_path { get; set; } = "";
+    public string? avatar_path { get; set; }
     public bool eliminando { get; set; }
 }
 

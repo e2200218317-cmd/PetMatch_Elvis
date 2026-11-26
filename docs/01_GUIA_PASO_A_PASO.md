@@ -51,7 +51,26 @@ En Authentication, habilita el proveedor **Email** y la confirmación del correo
 
 Configura una contraseña mínima de 8 caracteres y, donde estén disponibles, los requisitos de mayúsculas, minúsculas y números. La app aplica esas reglas y un máximo de 72 caracteres. Supabase debe seguir siendo quien valida y almacena las contraseñas.
 
-En las plantillas de correo de Authentication:
+### SMTP de Gmail para la prueba
+
+Usa una cuenta de Gmail dedicada a las pruebas. Activa la verificación en dos pasos y genera una contraseña en [Contraseñas de aplicaciones de Google](https://myaccount.google.com/apppasswords).
+
+En **Authentication → Emails → SMTP Settings**, activa **Enable custom SMTP** y guarda estos valores.
+
+| Campo | Valor |
+|---|---|
+| Sender email address | Dirección completa del Gmail remitente |
+| Sender name | `PETMATCH` |
+| Host | `smtp.gmail.com` |
+| Port number | `587` |
+| Username | La misma dirección del Gmail remitente |
+| Password | Contraseña de aplicación de Google, sin espacios |
+
+Introduce la contraseña de aplicación únicamente en el formulario SMTP de Supabase. Cada participante usa su propia dirección al registrarse en PETMATCH.
+
+### Plantillas y prueba en el emulador
+
+En **Authentication → Emails**, abre **Source** en cada plantilla, reemplaza el contenido de **Body** con el archivo correspondiente y guarda.
 
 | Plantilla | Archivo que debes copiar |
 |---|---|
@@ -62,7 +81,10 @@ Ambas usan `{{ .Token }}` para mostrar un código. Esta aplicación verifica el 
 
 **El envío de correo es un paso indispensable.** El proveedor de correo predeterminado de Supabase tiene restricciones de destinatarios y límites reducidos; para probar con correos de usuarios externos configura un SMTP propio o un Send Email Hook. No basta con escribir cualquier correo y asumir que el mensaje llegará. Revisa Authentication → Logs si no se entrega. No desactives la confirmación como solución a una prueba de recuperación que debe demostrarse con correo real.
 
-Para las primeras pruebas usa una dirección autorizada por tu configuración y espera entre solicitudes de códigos. La app informa los límites de envío cuando el servidor los devuelve.
+1. Registra desde el emulador una cuenta con un correo distinto al Gmail remitente. Comprueba que el correo de confirmación trae un código y que la app permite confirmar la cuenta al ingresarlo.
+2. Desde el inicio de sesión, abre **Recuperar contraseña** y solicita un código para esa cuenta. Usa el código del correo nuevo para guardar una contraseña e inicia sesión con ella.
+
+Espera entre solicitudes de códigos. La app informa los límites de envío cuando el servidor los devuelve.
 
 ## 5. Conectar la app
 

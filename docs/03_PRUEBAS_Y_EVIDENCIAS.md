@@ -97,20 +97,20 @@ La primera ronda es más lenta porque incluye abrir las conexiones seguras (TLS)
 
 ## Prueba de conectividad
 
-Con el teléfono en modo avión, abrir cada pantalla y anotar el resultado. La app no debe cerrarse y debe mostrar un mensaje claro; al reconectar, el botón de reintento o volver a abrir la pantalla debe cargar los datos.
+Prueba realizada el 25/11/2026 en un Samsung Galaxy S22 con modo avión. Con el teléfono en modo avión, abrir cada pantalla y anotar el resultado. La app no debe cerrarse y debe mostrar un mensaje claro; al reconectar, el botón de reintento o volver a abrir la pantalla debe cargar los datos.
 
 | Pantalla | Sin Internet | Al reconectar |
 |---|---|---|
-| Inicio (arranque) | | |
-| Catálogo | | |
-| Detalle de mascota | | |
-| Iniciar sesión | | |
-| Mi perfil | | |
-| Publicar (fotos, cámara y ubicación) | | |
-| Mis publicaciones | | |
-| Solicitudes recibidas | | |
-| Mis solicitudes | | |
-| Notificaciones | | |
+| Inicio (arranque) | Espera la respuesta y luego muestra el error con «Reintentar conexión» y «Entrar como visitante» | Carga normalmente |
+| Catálogo | Muestra «No se pudo conectar. Revisa tu conexión a Internet.» | Carga normalmente |
+| Mi perfil | No permite entrar: al validar la sesión muestra «No se pudo conectar. Revisa tu conexión a Internet.» | Carga normalmente |
+| Publicar (fotos, cámara y ubicación) | No permite entrar: al validar la sesión muestra «No se pudo conectar. Revisa tu conexión a Internet.» | Vuelve a abrir la pantalla |
+| Mis publicaciones | No permite entrar: al validar la sesión muestra «No se pudo conectar. Revisa tu conexión a Internet.» | Vuelve a abrir la pantalla |
+| Solicitudes recibidas | No permite entrar: al validar la sesión muestra «No se pudo conectar. Revisa tu conexión a Internet.» | Vuelve a abrir la pantalla |
+| Mis solicitudes | No permite entrar: al validar la sesión muestra «No se pudo conectar. Revisa tu conexión a Internet.» | Vuelve a abrir la pantalla |
+| Notificaciones | No permite entrar: al validar la sesión muestra «No se pudo conectar. Revisa tu conexión a Internet.» | Vuelve a abrir la pantalla |
+
+Resultado: en ninguna pantalla se cerró la aplicación. Las pantallas protegidas no se abren sin conexión porque primero validan la sesión con el servidor; esto evita mostrar datos desactualizados o pantallas vacías. Al desactivar el modo avión, todo volvió a cargar sin reiniciar la app.
 
 ## Sensores y servicio externo
 
